@@ -12,8 +12,6 @@ const {
 const User = require('../models/user.model')
 
 const jwt = require('../services/jwt')
-const fs = require('fs')
-const path = require('path')
 
 exports.test = (req, res) => {
   return res.send({
@@ -35,32 +33,29 @@ exports.register_OnlyAdmin = async (req, res) => {
     }
 
     const msg = validateData(data)
-    if (!msg) {
-      const checkUser = await findUser(data.username)
-      if (!checkUser) {
-        if (
-          params.role != 'ADMIN' &&
-          params.role != 'CLIENT' &&
-          params.role != 'HOTELADMIN'
-        ) {
-          return res.staus(400).send({ message: 'El rol no es válido' })
-        } else {
-          data.surname = params.surname
-          data.password = await encrypt(params.password)
-          data.phone = params.phone
 
-          let user = new User(data)
-          await user.save()
-          return res.send({ message: 'Usuario guardado exitosamente', user })
-        }
-      } else {
-        return res.status(201).send({
-          message: 'Nombre de usuario ya esta en uso, utiliza uno diferente',
-        })
-      }
-    } else {
+    if (msg) {
       return res.status(400).send(msg)
     }
+
+    const checkUser = await findUser(data.username)
+    if (checkUser) {
+      return res.status(400).send({
+        message: 'Nombre de usuario ya esta en uso, utiliza uno diferente',
+      })
+    }
+
+    if (params.role != 'ADMIN' || params.role != 'EMPLOYEE') {
+      return res.staus(400).send({ message: 'El rol no es válido' })
+    }
+
+    data.surname = params.surname
+    data.password = await encrypt(params.password)
+    data.phone = params.phone
+
+    let user = new User(data)
+    await user.save()
+    return res.send({ message: 'Usuario guardado exitosamente', user })
   } catch (err) {
     console.log(err)
     return res.status(500).send({ message: 'Error al registrarse' })
@@ -76,9 +71,9 @@ exports.getUser = async (req, res) => {
       return res
         .staus(400)
         .send({ message: 'El usuario ingresado no se ha podido encontrar' })
-    } else {
-      return res.send({ message: 'Usuario encontrado:', user })
     }
+
+    return res.send({ message: 'Usuario encontrado:', user })
   } catch (err) {
     console.log(err)
     return res.status(500).send({ message: 'Error obteniendo el usuario' })
@@ -103,14 +98,15 @@ exports.searchUser = async (req, res) => {
     }
 
     const msg = validateData(data)
-    if (!msg) {
-      const user = await User.find({
-        username: { $regex: params.username, $options: 'i' },
-      })
-      return res.send(user)
-    } else {
+
+    if (msg) {
       return res.status(400).send(msg)
     }
+
+    const user = await User.find({
+      username: { $regex: params.username, $options: 'i' },
+    })
+    return res.send(user)
   } catch (err) {
     console.log(err)
     return res.status(500).send({ message: 'Error buscando el usuario' })
@@ -123,53 +119,42 @@ exports.update_OnlyAdmin = async (req, res) => {
     const params = req.body
 
     const user = await User.findOne({ _id: userId })
-    if (user) {
-      const checkUpdated = await checkUpdate_OnlyAdmin(params)
-      if (checkUpdated === false) {
-        return res
-          .status(400)
-          .send({ message: 'Parámetros no válidos para actualizar' })
-      } else {
-        const checkRole = await User.findOne({ _id: userId })
-        if (checkRole.role === 'ADMIN') {
-          return res
-            .status(403)
-            .send({ message: 'No puede editar usuarios de rol ADMIN' })
-        } else {
-          const checkUser = await findUser(params.username)
-          if (checkUser && user.username != params.username) {
-            return res
-              .status(201)
-              .send({ message: 'Este nombre de usuario ya esta en uso' })
-          } else {
-            if (
-              params.role != 'ADMIN' &&
-              params.role != 'CLIENT' &&
-              params.role != 'HOTELADMIN'
-            ) {
-              return res
-                .status(201)
-                .send({ message: 'El rol ingresado no es valido' })
-            } else {
-              const updateUser = await User.findOneAndUpdate(
-                { _id: userId },
-                params,
-                { new: true }
-              ).lean()
-              if (!updateUser) {
-                return res
-                  .status(400)
-                  .send({ message: 'No se ha podido actualizar el usuario' })
-              } else {
-                return res.send({ message: 'Usuario actualizado', updateUser })
-              }
-            }
-          }
-        }
-      }
-    } else {
-      return res.status(404).send({ message: 'Este usuario no existe' })
+
+    if (!user) {
+      return res
+        .status(400)
+        .send({ message: 'El usuario ingresado no se ha podido encontrar' })
     }
+
+    const checkUpdated = await checkUpdate_OnlyAdmin(params)
+    if (checkUpdated === false) {
+      return res
+        .status(400)
+        .send({ message: 'Parámetros no válidos para actualizar' })
+    }
+
+    const checkUser = await findUser(params.username)
+    if (checkUser && user.username != params.username) {
+      return res.status(201).send({
+        message: 'Nombre de usuario ya esta en uso, utiliza uno diferente',
+      })
+    }
+
+    if (params.role != 'ADMIN') {
+      return res.status(201).send({ message: 'El rol ingresado no es valido' })
+    }
+
+    const updateUser = await User.findOneAndUpdate({ _id: userId }, params, {
+      new: true,
+    }).lean()
+
+    if (!updateUser) {
+      return res
+        .status(400)
+        .send({ message: 'No se ha podido actualizar el usuario' })
+    }
+
+    return res.send({ message: 'Usuario actualizado', updateUser })
   } catch (err) {
     console.log(err)
     return res.status(500).send({ message: 'Error actualizando el usuario' })
@@ -183,22 +168,16 @@ exports.delete_OnlyAdmin = async (req, res) => {
     const user = await User.findOne({ _id: userId })
     if (!user) {
       return res.send({ message: 'Usuario no encontrado' })
-    } else {
-      if (user.role === 'ADMIN' || user.role === 'HOTELADMIN') {
-        return res.status(403).send({
-          message: 'No puede eliminar usuarios de rol ADMIN ni HOTELADMIN',
-        })
-      } else {
-        const deleteUser = await User.findOneAndDelete({ _id: userId })
-        if (!deleteUser) {
-          return res
-            .status(500)
-            .send({ message: 'Usuario no encontrado o ya ha sido eliminado' })
-        } else {
-          return res.send({ message: 'Cuenta eliminada' })
-        }
-      }
     }
+
+    const deleteUser = await User.findOneAndDelete({ _id: userId })
+    if (!deleteUser) {
+      return res
+        .status(500)
+        .send({ message: 'Usuario no encontrado o ya ha sido eliminado' })
+    }
+
+    return res.send({ message: 'Cuenta eliminada' })
   } catch (err) {
     console.log(err)
     return res.status(500).send({ message: 'Error eliminando el usuario' })
@@ -252,28 +231,29 @@ exports.register = async (req, res) => {
       username: params.username,
       email: params.email,
       password: params.password,
-      role: 'CLIENT',
+      role: 'EMPLOYEE',
     }
     let msg = validateData(data)
 
-    if (!msg) {
-      let checkUser = await findUser(data.username)
-      if (!checkUser) {
-        data.surname = params.surname
-        data.password = await encrypt(params.password)
-        data.phone = params.phone
-
-        let user = new User(data)
-        await user.save()
-        return res.send({ message: 'Usuario guardado exitosamente' })
-      } else {
-        return res.status(409).send({
-          message: 'Nombre de usuario ya en uso, utiliza uno diferente',
-        })
-      }
-    } else {
+    if (msg) {
       return res.status(400).send(msg)
     }
+
+    let checkUser = await findUser(data.username)
+
+    if (checkUser) {
+      return res.status(409).send({
+        message: 'Nombre de usuario ya en uso, utiliza uno diferente',
+      })
+    }
+
+    data.surname = params.surname
+    data.password = await encrypt(params.password)
+    data.phone = params.phone
+
+    let user = new User(data)
+    await user.save()
+    return res.send({ message: 'Usuario guardado exitosamente' })
   } catch (err) {
     console.log(err)
     return res.status(500).send({ message: 'Error al registrarse' })
@@ -288,13 +268,14 @@ exports.myProfile = async (req, res) => {
     const user = await User.findOne({ _id: userId }).lean()
     delete user.password
     delete user.__v
+
     if (!user) {
       return res
         .status(403)
         .send({ message: 'El usuario no se ha podido encontrar' })
-    } else {
-      return res.send({ message: 'Este es tu usuario:', user })
     }
+
+    return res.send({ message: 'Este es tu usuario:', user })
   } catch (err) {
     console.log(err)
     return res.status(500).send({ message: 'Error obteniendo el usuario' })
@@ -307,43 +288,36 @@ exports.update = async (req, res) => {
     const params = req.body
 
     const user = await User.findOne({ _id: userId })
-    if (user) {
-      const checkUpdated = await checkUpdate(params)
-      if (checkUpdated === false) {
-        return res
-          .status(400)
-          .send({ message: 'Parámetros no válidos para actualizar' })
-      } else {
-        const checkRole = await User.findOne({ _id: userId })
-        if (checkRole.role === 'ADMIN') {
-          return res.status(403).send({
-            message: 'No puedes editar tu usuario si tienes el rol ADMIN',
-          })
-        } else {
-          const checkUser = await findUser(params.username)
-          if (checkUser && user.username != params.username) {
-            return res
-              .status(201)
-              .send({ message: 'Este nombre de usuario ya esta en uso' })
-          } else {
-            const updateUser = await User.findOneAndUpdate(
-              { _id: userId },
-              params,
-              { new: true }
-            ).lean()
-            if (!updateUser) {
-              return res
-                .status(403)
-                .send({ message: 'No se ha podido actualizar el usuario' })
-            } else {
-              return res.send({ message: 'Usuario actualizado', updateUser })
-            }
-          }
-        }
-      }
-    } else {
-      return res.send({ message: 'Este usuario no existe' })
+    if (!user) {
+      return res
+        .status(400)
+        .send({ message: 'El usuario ingresado no se ha podido encontrar' })
     }
+
+    const checkUpdated = await checkUpdate(params)
+    if (checkUpdated === false) {
+      return res
+        .status(400)
+        .send({ message: 'Parámetros no válidos para actualizar' })
+    }
+
+    const checkUser = await findUser(params.username)
+    if (checkUser && user.username != params.username) {
+      return res
+        .status(201)
+        .send({ message: 'Este nombre de usuario ya esta en uso' })
+    }
+
+    const updateUser = await User.findOneAndUpdate({ _id: userId }, params, {
+      new: true,
+    }).lean()
+    if (!updateUser) {
+      return res
+        .status(403)
+        .send({ message: 'No se ha podido actualizar el usuario' })
+    }
+
+    return res.send({ message: 'Usuario actualizado', updateUser })
   } catch (err) {
     console.log(err)
     return res.status(500).send({ message: 'Error actualizando el usuario' })
@@ -354,19 +328,12 @@ exports.delete = async (req, res) => {
   try {
     const userId = req.user.sub
 
-    const checkRole = await User.findOne({ _id: userId })
-    if (checkRole.role === 'ADMIN' && checkRole.role === 'HOTELADMIN') {
-      return res.status(403).send({
-        message: 'No puede eliminar usuarios de rol ADMIN ni HOTELADMIN',
-      })
-    } else {
-      const deleteUser = await User.findOneAndDelete({ _id: userId })
-      if (!deleteUser) {
-        return res.status(500).send({ message: 'Usuario no encontrado' })
-      } else {
-        return res.send({ message: 'Cuenta eliminada' })
-      }
+    const deleteUser = await User.findOneAndDelete({ _id: userId })
+    if (!deleteUser) {
+      return res.status(500).send({ message: 'Usuario no encontrado' })
     }
+
+    return res.send({ message: 'Cuenta eliminada' })
   } catch (err) {
     console.log(err)
     return res.status(500).send({ message: 'Error eliminando el usuario' })

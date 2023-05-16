@@ -5,16 +5,13 @@ const api = express.Router();
 const userController = require('../controllers/user.controller');
 const midAuth = require('../services/auth');
 
-const connectMultiparty = require('connect-multiparty');
-const upload = connectMultiparty({ uploadDir: './uploads/users' });
-
 //* Admnistrador
-api.get('/test', [midAuth.ensureAuth, midAuth.isAdmin], userController.test);
+api.get('/test', userController.test);
 
 api.post('/register_OnlyAdmin', [midAuth.ensureAuth, midAuth.isAdmin], userController.register_OnlyAdmin);
 
-api.get('/getUsers', [midAuth.ensureAuth, midAuth.isAdmin], userController.getUsers);
 api.get('/getUser/:id', [midAuth.ensureAuth, midAuth.isAdmin], userController.getUser);
+api.get('/getUsers', [midAuth.ensureAuth, midAuth.isAdmin], userController.getUsers);
 
 api.post('/searchUser', [midAuth.ensureAuth, midAuth.isAdmin], userController.searchUser);
 
