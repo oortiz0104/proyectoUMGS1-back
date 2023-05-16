@@ -1,13 +1,13 @@
 {
-  "name": "gestorhotelero-back",
+  "name": "proyectoumgs1-back",
   "version": "1.0.0",
-  "description": "Proyecto bimestral gestor hotelero",
+  "description": "Proyecto semestral",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js"
   },
-  "author": "Grupo #2, IN6AV2",
+  "author": "Grupo #6 - UMG",
   "license": "MIT",
   "dependencies": {
     "bcrypt-nodejs": "^0.0.3",

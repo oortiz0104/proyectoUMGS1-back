@@ -32,31 +32,3 @@ exports.isAdmin = (req, res, next) => {
         return err;
     }
 }
-
-exports.isHotelAdmin = (req, res, next) => {
-    try {
-        const role = req.user.role;
-        if (role === 'HOTELADMIN') {
-            return next();
-        } else {
-            return res.status(403).send({ message: 'Acceso denegado a la función' });
-        }
-    } catch (err) {
-        console.log(err);
-        return err;
-    }
-}
-
-exports.isClient = (req, res, next) => {
-    try {
-        const role = req.user.role;
-        if (role === 'CLIENT') {
-            return next();
-        } else {
-            return res.status(403).send({ message: 'Acceso denegado a la función' });
-        }
-    } catch (err) {
-        console.log(err);
-        return err;
-    }
-}

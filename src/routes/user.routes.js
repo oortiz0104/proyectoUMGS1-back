@@ -14,7 +14,6 @@ api.get('/test', [midAuth.ensureAuth, midAuth.isAdmin], userController.test);
 api.post('/register_OnlyAdmin', [midAuth.ensureAuth, midAuth.isAdmin], userController.register_OnlyAdmin);
 
 api.get('/getUsers', [midAuth.ensureAuth, midAuth.isAdmin], userController.getUsers);
-api.get('/getUsersHotelAdmin', [midAuth.ensureAuth, midAuth.isAdmin], userController.getUsersHotelAdmin);
 api.get('/getUser/:id', [midAuth.ensureAuth, midAuth.isAdmin], userController.getUser);
 
 api.post('/searchUser', [midAuth.ensureAuth, midAuth.isAdmin], userController.searchUser);
@@ -28,9 +27,6 @@ api.post('/login', userController.login);
 api.post('/register', userController.register);
 
 //* Usuarios registrados
-api.post('/uploadImage', [midAuth.ensureAuth, upload], userController.uploadImage);
-
-api.get('/getImage/:fileName', upload, userController.getImageUser);
 api.get('/myProfile', midAuth.ensureAuth, userController.myProfile);
 
 api.put('/update', midAuth.ensureAuth, userController.update);

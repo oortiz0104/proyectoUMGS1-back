@@ -14,9 +14,9 @@ app.listen(port, async () => {
         name: 'ADMIN',
         surname: 'ADMIN',
         username: 'ADMIN',
+        password: await encrypt('admin123'),
         email: 'ADMIN',
         phone: 'ADMIN',
-        password: await encrypt('hoteles123'),
         role: 'ADMIN'
     };
 
