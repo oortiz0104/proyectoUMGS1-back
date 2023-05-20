@@ -1,24 +1,28 @@
 'use strict'
 
-import { validateData, findCellarUbication, checkUpdate } from '../utils/validate'
-import CellarUbication, { findOne, find } from '../models/cellarUbication.model'
+const {
+  validateData,
+  findCellarUbication,
+  checkUpdate,
+} = require('../utils/validate')
+const CellarUbication = require('../models/cellarUbication.model')
+const State = require('../models/state.model')
 
-import jwt from '../services/jwt'
+const jwt = require('../services/jwt')
 
-export function test(req, res) {
+exports.test = (req, res) => {
   return res.send({
-    message: 'Mensaje de prueba desde el controlador de nuevos equipos',
+    message: 'Mensaje de prueba desde el controlador de estados',
   })
 }
 
 //* Funciones admistrador ---------------------------------------------------------------------------------------
 
-export async function addCellarUbication(req, res) {
+exports.addCellarUbication = async (req, res) => {
   try {
     const params = req.body
     const data = {
-      cellarNumber: params.cellarNumber,
-      shelve: params.shelve,
+      name: params.name,
     }
 
     const msg = validateData(data)
@@ -49,11 +53,11 @@ export async function addCellarUbication(req, res) {
   }
 }
 
-export async function getCellarUbication(req, res) {
+exports.getCellarUbication = async (req, res) => {
   try {
     const cellarUbicationId = req.params.id
 
-    const cellar = await findOne({ _id: cellarUbicationId })
+    const cellar = await CellarUbication.findOne({ _id: cellarUbicationId })
     if (!cellar) {
       return res.status(400).send({ message: 'Bodega no encontrada' })
     }
@@ -65,9 +69,9 @@ export async function getCellarUbication(req, res) {
   }
 }
 
-export async function getCellarsUbication(req, res) {
+exports.getCellarsUbication = async (req, res) => {
   try {
-    const cellars = await find()
+    const cellars = await CellarUbication.find()
     return res.send({ message: 'Bodegas encontradas', cellars })
   } catch (err) {
     console.log(err)
@@ -75,7 +79,7 @@ export async function getCellarsUbication(req, res) {
   }
 }
 
-export async function searchCellarUbication(req, res) {
+exports.searchCellarUbication = async (req, res) => {
   try {
     const params = req.body
     const data = {
@@ -88,7 +92,7 @@ export async function searchCellarUbication(req, res) {
       return res.status(400).send(msg)
     }
 
-    const user = await find({
+    const user = await CellarUbication.find({
       cellarNumber: { $regex: params.cellarNumber, $options: 'i' },
     })
     return res.send(user)
@@ -98,12 +102,12 @@ export async function searchCellarUbication(req, res) {
   }
 }
 
-export async function updateCellarUbication(req, res) {
+exports.updateCellarUbication = async (req, res) => {
   try {
     const cellarUbicationId = req.params.id
     const params = req.body
 
-    const cellar = await findOne({ _id: cellarUbicationId })
+    const cellar = await CellarUbication.findOne({ _id: cellarUbicationId })
 
     if (!cellar) {
       return res
@@ -147,7 +151,7 @@ export async function updateCellarUbication(req, res) {
   }
 }
 
-export async function deleteCellarUbication(req, res) {
+exports.deleteCellarUbication = async (req, res) => {
   try {
     const cellarUbicationId = req.params.id
 

@@ -46,7 +46,7 @@ exports.register_OnlyAdmin = async (req, res) => {
     }
 
     if (params.role != 'ADMIN' || params.role != 'EMPLOYEE') {
-      return res.staus(400).send({ message: 'El rol no es válido' })
+      return res.staus(401).send({ message: 'El rol no es válido' })
     }
 
     data.surname = params.surname
@@ -135,13 +135,13 @@ exports.update_OnlyAdmin = async (req, res) => {
 
     const checkUser = await findUser(params.username)
     if (checkUser && user.username != params.username) {
-      return res.status(201).send({
+      return res.status(400).send({
         message: 'Nombre de usuario ya esta en uso, utiliza uno diferente',
       })
     }
 
     if (params.role != 'ADMIN') {
-      return res.status(201).send({ message: 'El rol ingresado no es valido' })
+      return res.status(401).send({ message: 'El rol ingresado no es valido' })
     }
 
     const updateUser = await User.findOneAndUpdate({ _id: userId }, params, {
@@ -167,13 +167,15 @@ exports.delete_OnlyAdmin = async (req, res) => {
 
     const user = await User.findOne({ _id: userId })
     if (!user) {
-      return res.send({ message: 'Usuario no encontrado' })
+      return res
+        .status(400)
+        .send({ message: 'El usuario ingresado no se ha podido encontrar' })
     }
 
     const deleteUser = await User.findOneAndDelete({ _id: userId })
     if (!deleteUser) {
       return res
-        .status(500)
+        .status(400)
         .send({ message: 'Usuario no encontrado o ya ha sido eliminado' })
     }
 
@@ -197,7 +199,7 @@ exports.login = async (req, res) => {
     let msg = validateData(data)
 
     if (msg) {
-      return res.status(404).send(msg)
+      return res.status(400).send(msg)
     }
 
     let checkUser = await findUser(params.username)
@@ -213,13 +215,13 @@ exports.login = async (req, res) => {
     }
 
     return res
-      .status(403)
+      .status(401)
       .send({ message: 'Usuario y/o contraseña incorrectas' })
   } catch (err) {
     console.log(err)
     return res
       .status(500)
-      .send({ message: 'Usuario y/o contraseña incorrectas' })
+      .send({ message: 'Error al iniciar sesión, intente de nuevo' })
   }
 }
 
@@ -242,7 +244,7 @@ exports.register = async (req, res) => {
     let checkUser = await findUser(data.username)
 
     if (checkUser) {
-      return res.status(409).send({
+      return res.status(400).send({
         message: 'Nombre de usuario ya en uso, utiliza uno diferente',
       })
     }
@@ -271,7 +273,7 @@ exports.myProfile = async (req, res) => {
 
     if (!user) {
       return res
-        .status(403)
+        .status(400)
         .send({ message: 'El usuario no se ha podido encontrar' })
     }
 
@@ -304,7 +306,7 @@ exports.update = async (req, res) => {
     const checkUser = await findUser(params.username)
     if (checkUser && user.username != params.username) {
       return res
-        .status(201)
+        .status(400)
         .send({ message: 'Este nombre de usuario ya esta en uso' })
     }
 
@@ -313,7 +315,7 @@ exports.update = async (req, res) => {
     }).lean()
     if (!updateUser) {
       return res
-        .status(403)
+        .status(400)
         .send({ message: 'No se ha podido actualizar el usuario' })
     }
 
@@ -330,7 +332,7 @@ exports.delete = async (req, res) => {
 
     const deleteUser = await User.findOneAndDelete({ _id: userId })
     if (!deleteUser) {
-      return res.status(500).send({ message: 'Usuario no encontrado' })
+      return res.status(400).send({ message: 'Usuario no encontrado' })
     }
 
     return res.send({ message: 'Cuenta eliminada' })

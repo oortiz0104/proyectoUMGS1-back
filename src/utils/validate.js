@@ -2,6 +2,11 @@
 
 const User = require('../models/user.model')
 const CellarUbication = require('../models/cellarUbication.model')
+const State = require('../models/state.model')
+const NewPC = require('../models/newPC.model')
+const NewPCRegister = require('../models/newPCRegister.model')
+const UsedPC = require('../models/usedPC.model')
+const UsedPCRegister = require('../models/usedPCRegister.model')
 
 const bcrypt = require('bcrypt-nodejs')
 
@@ -88,6 +93,18 @@ exports.alreadyUser = async (username) => {
 exports.findCellarUbication = async (cellarNumber) => {
   try {
     let exist = await CellarUbication.findOne({ cellarNumber: cellarNumber }).lean()
+    return exist
+  } catch (err) {
+    console.log(err)
+    return err
+  }
+}
+
+//* Estados ---------------------------------------------------------------------------------------
+
+exports.findState = async (name) => {
+  try {
+    let exist = await State.findOne({ name: name }).lean()
     return exist
   } catch (err) {
     console.log(err)
