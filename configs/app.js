@@ -10,6 +10,7 @@ const cellarRoutes = require('../src/routes/cellar.routes')
 const newPCRoutes = require('../src/routes/newPC.routes')
 const newPCRegisterRoutes = require('../src/routes/newPCRegister.routes')
 const usedPCRoutes = require('../src/routes/usedPC.routes')
+const usedPCRegisterRoutes = require('../src/routes/usedPCRegister.routes')
 
 app.use(helmet()) //Seguridad de Express
 app.use(bodyParser.urlencoded({ extended: false }))
@@ -22,5 +23,6 @@ app.use('/cellar', cellarRoutes)
 app.use('/newPC', newPCRoutes)
 app.use('/newPCRegister', newPCRegisterRoutes)
 app.use('/usedPC', usedPCRoutes)
+app.use('/usedPCRegister', usedPCRegisterRoutes)
 
 module.exports = app

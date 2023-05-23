@@ -3,14 +3,13 @@
 const {
   validateData,
   findNewPC,
-  checkUpdateNewPC,
   findUsedPC,
+  checkUpdateNewPC,
 } = require('../utils/validate')
 const UsedPC = require('../models/usedPC.model')
 const UsedPCRegister = require('../models/usedPCRegister.model')
 const CellarUbication = require('../models/cellarUbication.model')
 const moment = require('moment')
-const mongoose = require('mongoose')
 
 exports.test = (req, res) => {
   return res.send({
@@ -71,13 +70,13 @@ exports.checkIn = async (req, res) => {
     let usedPC = new UsedPC(data)
     await usedPC.save()
 
-    let newPCRegister = new UsedPCRegister({
+    let usedPCRegister = new UsedPCRegister({
       check_in: moment().format('YYYY-MM-DD HH:mm:ss'),
       check_out: null,
       user: userId,
       pc: usedPC._id,
     })
-    await newPCRegister.save()
+    await usedPCRegister.save()
 
     let updateUbication = await CellarUbication.findOneAndUpdate(
       { _id: data.ubication },
@@ -88,7 +87,7 @@ exports.checkIn = async (req, res) => {
     return res.send({
       message: 'Equipo usado registrado correctamente',
       usedPC,
-      newPCRegister,
+      usedPCRegister,
       updateUbication,
     })
   } catch (err) {

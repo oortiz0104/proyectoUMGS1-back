@@ -2,7 +2,6 @@
 
 const express = require('express')
 const api = express.Router()
-const newPCController = require('../controllers/newPC.controller')
 const newPCRegisterController = require('../controllers/newPCRegister.controller')
 const midAuth = require('../services/auth')
 

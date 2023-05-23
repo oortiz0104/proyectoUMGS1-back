@@ -3,6 +3,7 @@
 const {
   validateData,
   findNewPC,
+  findUsedPC,
   checkUpdateNewPC,
 } = require('../utils/validate')
 const NewPC = require('../models/newPC.model')
