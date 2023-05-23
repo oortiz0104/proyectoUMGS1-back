@@ -1,11 +1,14 @@
 'use strict'
 
-import { validateData, findCellarUbication, checkUpdate } from '../utils/validate'
-import CellarUbication, { findOne, find } from '../models/cellarUbication.model'
+const {
+  validateData,
+  findCellarUbication,
+  checkUpdate,
+  findShelve,
+} = require('../utils/validate')
+const CellarUbication = require('../models/cellarUbication.model')
 
-import jwt from '../services/jwt'
-
-export function test(req, res) {
+exports.test = (req, res) => {
   return res.send({
     message: 'Mensaje de prueba desde el controlador de nuevos equipos',
   })
@@ -13,7 +16,7 @@ export function test(req, res) {
 
 //* Funciones admistrador ---------------------------------------------------------------------------------------
 
-export async function addCellarUbication(req, res) {
+exports.addCellarUbication = async (req, res) => {
   try {
     const params = req.body
     const data = {
@@ -27,55 +30,52 @@ export async function addCellarUbication(req, res) {
       return res.status(400).send(msg)
     }
 
-    const checkCellar = await findCellarUbication(data.cellarNumber)
-    if (checkCellar) {
+    const checkUbication = await findCellarUbication(
+      data.cellarNumber,
+      data.shelve
+    )
+    if (checkUbication) {
       return res.status(400).send({
-        message: 'El número de bodega ingresado ya se encuentra registrado',
+        message: 'La ubicación ingresada ya existe',
       })
-    }
-
-    if (params.role != 'ADMIN') {
-      return res.staus(402).send({ message: 'El rol no es válido' })
     }
 
     let cellarUbication = new CellarUbication(data)
     await cellarUbication.save()
-    return res
-      .status(201)
-      .send({ message: 'Bodega registrada', cellarUbication })
+    return res.send({ message: 'Ubicación registrada', cellarUbication })
   } catch (err) {
     console.log(err)
-    return res.status(500).send({ message: 'Error registrando la bodega' })
+    return res.status(500).send({ message: 'Error registrando la ubicación' })
   }
 }
 
-export async function getCellarUbication(req, res) {
+exports.getCellarUbication = async (req, res) => {
   try {
     const cellarUbicationId = req.params.id
 
-    const cellar = await findOne({ _id: cellarUbicationId })
+    const cellar = await CellarUbication.findOne({ _id: cellarUbicationId })
     if (!cellar) {
-      return res.status(400).send({ message: 'Bodega no encontrada' })
+      return res.status(400).send({ message: 'Ubicación no encontrada' })
     }
 
-    return res.send({ message: 'Bodega encontrada', cellar })
+    return res.send({ message: 'Ubicación encontrada', cellar })
   } catch (err) {
     console.log(err)
-    return res.status(500).send({ message: 'Error obteniendo la bodega' })
+    return res.status(500).send({ message: 'Error obteniendo la ubicación' })
   }
 }
 
-export async function getCellarsUbication(req, res) {
+exports.getCellarUbications = async (req, res) => {
   try {
-    const cellars = await find()
-    return res.send({ message: 'Bodegas encontradas', cellars })
+    const cellars = await CellarUbication.find()
+    return res.send({ message: 'Ubicaciones encontradas', cellars })
   } catch (err) {
     console.log(err)
-    return res.status(500).send({ message: 'Error obteniendo las bodegas' })
+    return res.status(500).send({ message: 'Error obteniendo las ubicaciones' })
   }
 }
 
-export async function searchCellarUbication(req, res) {
+exports.searchCellarUbication = async (req, res) => {
   try {
     const params = req.body
     const data = {
@@ -88,27 +88,28 @@ export async function searchCellarUbication(req, res) {
       return res.status(400).send(msg)
     }
 
-    const user = await find({
+    const cellars = await CellarUbication.find({
       cellarNumber: { $regex: params.cellarNumber, $options: 'i' },
+      shelve: { $regex: params.shelve, $options: 'i' },
     })
-    return res.send(user)
+    return res.send(cellars)
   } catch (err) {
     console.log(err)
     return res.status(500).send({ message: 'Error obteniendo la bodega' })
   }
 }
 
-export async function updateCellarUbication(req, res) {
+exports.updateCellarUbication = async (req, res) => {
   try {
     const cellarUbicationId = req.params.id
     const params = req.body
 
-    const cellar = await findOne({ _id: cellarUbicationId })
+    const cellar = await CellarUbication.findOne({ _id: cellarUbicationId })
 
     if (!cellar) {
       return res
         .status(400)
-        .send({ message: 'No se ha encontrado la bodega a actualizar' })
+        .send({ message: 'No se ha encontrado la ubicación a actualizar' })
     }
 
     const checkUpdated = await checkUpdate(params)
@@ -118,14 +119,17 @@ export async function updateCellarUbication(req, res) {
         .send({ message: 'Parámetros no válidos para actualizar' })
     }
 
-    const checkCellarNumber = await findCellarUbication(params.cellarNumber)
-    if (checkCellarNumber && cellar.cellarNumber != params.cellarNumber) {
-      return res.status(201).send({
-        message: 'El número de bodega ingresado ya se encuentra registrado',
+    const checkUbication = await findCellarUbication(
+      data.cellarNumber,
+      data.shelve
+    )
+    if (checkUbication) {
+      return res.status(400).send({
+        message: 'La ubicación ingresada ya se encuentra registrada',
       })
     }
 
-    const updateCellar = await User.findOneAndUpdate(
+    const updateCellar = await CellarUbication.findOneAndUpdate(
       { _id: cellarUbicationId },
       params,
       { new: true }
@@ -134,38 +138,33 @@ export async function updateCellarUbication(req, res) {
     if (!updateCellar) {
       return res
         .status(400)
-        .send({ message: 'No se ha podido actualizar la bodega' })
+        .send({ message: 'No se ha podido actualizar la ubicación' })
     }
 
     return res.send({
-      message: 'Bodega actualizada',
+      message: 'Ubicación actualizada correctamente',
       updateCellar,
     })
   } catch (err) {
     console.log(err)
-    return res.status(500).send({ message: 'Error actualizando la bodega' })
+    return res.status(500).send({ message: 'Error actualizando la ubicación' })
   }
 }
 
-export async function deleteCellarUbication(req, res) {
+exports.deleteCellarUbication = async (req, res) => {
   try {
     const cellarUbicationId = req.params.id
 
-    const user = await User.findOne({ _id: cellarUbicationId })
-    if (!user) {
-      return res.send({ message: 'Usuario no encontrado' })
-    }
-
-    const deleteUser = await User.findOneAndDelete({ _id: cellarUbicationId })
+    const deleteUser = await CellarUbication.findOneAndDelete({
+      _id: cellarUbicationId,
+    })
     if (!deleteUser) {
-      return res
-        .status(500)
-        .send({ message: 'Usuario no encontrado o ya ha sido eliminado' })
+      return res.status(500).send({ message: 'Ubicación no encontrada' })
     }
 
-    return res.send({ message: 'Cuenta eliminada' })
+    return res.send({ message: 'Ubicación eliminada correctamente' })
   } catch (err) {
     console.log(err)
-    return res.status(500).send({ message: 'Error eliminando el usuario' })
+    return res.status(500).send({ message: 'Error eliminando la ubicación' })
   }
 }

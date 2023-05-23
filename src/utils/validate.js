@@ -2,7 +2,6 @@
 
 const User = require('../models/user.model')
 const CellarUbication = require('../models/cellarUbication.model')
-const State = require('../models/state.model')
 const NewPC = require('../models/newPC.model')
 const NewPCRegister = require('../models/newPCRegister.model')
 const UsedPC = require('../models/usedPC.model')
@@ -78,33 +77,14 @@ exports.checkUpdate_OnlyAdmin = async (params) => {
   }
 }
 
-exports.alreadyUser = async (username) => {
-  try {
-    let exist = User.findOne({ username: username }).lean()
-    return exist
-  } catch (err) {
-    console.log(err)
-    return err
-  }
-}
-
 //* Ubicación en bodega ---------------------------------------------------------------------------------------
 
-exports.findCellarUbication = async (cellarNumber) => {
+exports.findCellarUbication = async (cellarNumber, shelve) => {
   try {
-    let exist = await CellarUbication.findOne({ cellarNumber: cellarNumber }).lean()
-    return exist
-  } catch (err) {
-    console.log(err)
-    return err
-  }
-}
-
-//* Estados ---------------------------------------------------------------------------------------
-
-exports.findState = async (name) => {
-  try {
-    let exist = await State.findOne({ name: name }).lean()
+    let exist = await CellarUbication.findOne({
+      cellarNumber: cellarNumber,
+      shelve: shelve,
+    }).lean()
     return exist
   } catch (err) {
     console.log(err)

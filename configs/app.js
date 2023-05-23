@@ -1,18 +1,20 @@
 'use strict'
-const express = require('express');
-const bodyParser = require('body-parser');
-const helmet = require('helmet');
-const cors = require('cors');
-const app = express();
+const express = require('express')
+const bodyParser = require('body-parser')
+const helmet = require('helmet')
+const cors = require('cors')
+const app = express()
 
-const userRoutes = require('../src/routes/user.routes');
+const userRoutes = require('../src/routes/user.routes')
+const cellarRoutes = require('../src/routes/cellar.routes')
 
-app.use(helmet()); //Seguridad de Express
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-app.use(cors()); //Aceptar solicitudes
+app.use(helmet()) //Seguridad de Express
+app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.json())
+app.use(cors()) //Aceptar solicitudes
 
 //Configuración de rutas
-app.use('/user', userRoutes);
+app.use('/user', userRoutes)
+app.use('/cellar', cellarRoutes)
 
-module.exports = app;
+module.exports = app

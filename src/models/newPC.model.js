@@ -1,13 +1,13 @@
 'use strict'
 const mongoose = require('mongoose')
 
-const userSchema = mongoose.Schema({
+const newPCSchema = mongoose.Schema({
   brand: String,
   model: String,
   serialNumber: String,
   purchaseOrder: String,
   ubication: { type: mongoose.Schema.ObjectId, ref: 'cellarUbication' },
-  state: { type: mongoose.Schema.ObjectId, ref: 'state' },
+  state: String,
 })
 
-module.exports = mongoose.model('newPC', userSchema)
+module.exports = mongoose.model('newPC', newPCSchema)

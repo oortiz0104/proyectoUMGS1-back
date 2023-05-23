@@ -2,7 +2,6 @@
 
 const {
   validateData,
-  validateExtension,
   findUser,
   checkPassword,
   checkUpdate,
@@ -140,7 +139,7 @@ exports.update_OnlyAdmin = async (req, res) => {
       })
     }
 
-    if (params.role != 'ADMIN') {
+    if (params.role != 'ADMIN' || params.role != 'EMPLOYEE') {
       return res.status(401).send({ message: 'El rol ingresado no es valido' })
     }
 
@@ -221,7 +220,7 @@ exports.login = async (req, res) => {
     console.log(err)
     return res
       .status(500)
-      .send({ message: 'Error al iniciar sesión, intente de nuevo' })
+      .send({ message: 'Usuario y/o contraseña incorrectas' })
   }
 }
 
@@ -313,6 +312,7 @@ exports.update = async (req, res) => {
     const updateUser = await User.findOneAndUpdate({ _id: userId }, params, {
       new: true,
     }).lean()
+    
     if (!updateUser) {
       return res
         .status(400)
