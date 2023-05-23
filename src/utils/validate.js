@@ -132,3 +132,15 @@ exports.checkUpdateNewPC = async (params) => {
     return err
   }
 }
+
+//* PC Usados ---------------------------------------------------------------------------------------
+
+exports.findUsedPC = async (serialNumber) => {
+  try {
+    let exist = await UsedPC.findOne({ serialNumber: serialNumber }).lean()
+    return exist
+  } catch (err) {
+    console.log(err)
+    return err
+  }
+}

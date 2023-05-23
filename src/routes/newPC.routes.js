@@ -9,7 +9,7 @@ const midAuth = require('../services/auth');
 api.get('/test', newPCController.test);
 
 api.post('/checkIn', [midAuth.ensureAuth], newPCController.checkIn);
-api.post('/checkOut/:id', [midAuth.ensureAuth], newPCController.checkOutNewPC);
+api.post('/checkOut/:id', [midAuth.ensureAuth], newPCController.checkOut);
 
 api.get('/getNewPC/:id', [midAuth.ensureAuth], newPCController.getNewPC);
 api.get('/getNewPCs', [midAuth.ensureAuth], newPCController.getNewPCs);

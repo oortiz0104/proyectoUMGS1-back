@@ -4,15 +4,17 @@ const {
   validateData,
   findNewPC,
   checkUpdateNewPC,
+  findUsedPC,
 } = require('../utils/validate')
-const NewPC = require('../models/newPC.model')
+const UsedPC = require('../models/usedPC.model')
+const UsedPCRegister = require('../models/usedPCRegister.model')
 const CellarUbication = require('../models/cellarUbication.model')
-const NewPCRegister = require('../models/newPCRegister.model')
 const moment = require('moment')
+const mongoose = require('mongoose')
 
 exports.test = (req, res) => {
   return res.send({
-    message: 'Ruta de prueba para el controlador de equipos nuevos',
+    message: 'Ruta de prueba para el controlador de equipos usados',
   })
 }
 
@@ -26,7 +28,6 @@ exports.checkIn = async (req, res) => {
       brand: params.brand,
       model: params.model,
       serialNumber: params.serialNumber,
-      purchaseOrder: params.purchaseOrder,
       ubication: params.ubication,
       state: 'Entrada',
       deleted: false,
@@ -38,9 +39,9 @@ exports.checkIn = async (req, res) => {
       return res.status(400).send(msg)
     }
 
-    const checkPC = await findNewPC(data.serialNumber)
+    const checkNewPC = await findNewPC(data.serialNumber)
     const checkUsedPC = await findUsedPC(data.serialNumber)
-    if (checkPC || checkUsedPC) {
+    if (checkNewPC || checkUsedPC) {
       return res.status(400).send({
         message: 'El número de serial ya se encuentra registrado',
       })
@@ -67,14 +68,14 @@ exports.checkIn = async (req, res) => {
       })
     }
 
-    let newPC = new NewPC(data)
-    await newPC.save()
+    let usedPC = new UsedPC(data)
+    await usedPC.save()
 
-    let newPCRegister = new NewPCRegister({
+    let newPCRegister = new UsedPCRegister({
       check_in: moment().format('YYYY-MM-DD HH:mm:ss'),
       check_out: null,
       user: userId,
-      pc: newPC._id,
+      pc: usedPC._id,
     })
     await newPCRegister.save()
 
@@ -85,8 +86,8 @@ exports.checkIn = async (req, res) => {
     )
 
     return res.send({
-      message: 'Equipo nuevo registrado correctamente',
-      newPC,
+      message: 'Equipo usado registrado correctamente',
+      usedPC,
       newPCRegister,
       updateUbication,
     })
@@ -98,47 +99,47 @@ exports.checkIn = async (req, res) => {
 
 exports.checkOut = async (req, res) => {
   try {
-    const newPCId = req.params.id
+    const usedPCId = req.params.id
 
-    const newPC = await NewPC.findOne({ _id: newPCId })
-    if (!newPC) {
+    const usedPC = await UsedPC.findOne({ _id: usedPCId })
+    if (!usedPC) {
       return res.status(400).send({ message: 'Equipo nuevo no encontrado' })
     }
 
-    if (newPC.state === 'Salida') {
+    if (usedPC.state === 'Salida') {
       return res
         .status(400)
         .send({ message: 'El equipo ya se encuentra en salida' })
     }
 
-    if (newPC.deleted) {
+    if (usedPC.deleted) {
       return res
         .status(400)
         .send({ message: 'El equipo se encuentra eliminado' })
     }
 
-    let updateNewPCRegister = await NewPCRegister.findOneAndUpdate(
-      { pc: newPCId, check_out: null },
+    let updateUsedPCRegister = await UsedPCRegister.findOneAndUpdate(
+      { pc: usedPCId, check_out: null },
       { check_out: moment().format('YYYY-MM-DD HH:mm:ss') },
       { new: true }
     )
 
-    let newPCUpdate = await NewPC.findOneAndUpdate(
-      { _id: newPCId },
+    let usedPCUpdate = await UsedPC.findOneAndUpdate(
+      { _id: usedPCId },
       { state: 'Salida' },
       { new: true }
     )
 
     let updateUbication = await CellarUbication.findOneAndUpdate(
-      { _id: newPC.ubication },
+      { _id: usedPC.ubication },
       { occupied: false },
       { new: true }
     )
 
     return res.send({
-      message: 'Equipo nuevo marcado como salida',
-      updateNewPCRegister,
-      newPCUpdate,
+      message: 'Equipo usado marcado como salida',
+      updateUsedPCRegister,
+      usedPCUpdate,
       updateUbication,
     })
   } catch (err) {
@@ -147,36 +148,36 @@ exports.checkOut = async (req, res) => {
   }
 }
 
-exports.getNewPC = async (req, res) => {
+exports.getUsedPC = async (req, res) => {
   try {
-    const newPCId = req.params.id
+    const usedPCId = req.params.id
 
-    const newPC = await NewPC.findOne({
-      _id: newPCId,
+    const usedPC = await UsedPC.findOne({
+      _id: usedPCId,
       deleted: false,
     }).populate('ubication')
-    if (!newPC) {
-      return res.status(400).send({ message: 'Equipo nuevo no encontrado' })
+    if (!usedPC) {
+      return res.status(400).send({ message: 'Equipo usado no encontrado' })
     }
 
-    return res.send({ message: 'Equipo nuevo encontrado', newPC })
+    return res.send({ message: 'Equipo usado encontrado', usedPC })
   } catch (err) {
     console.log(err)
     return res.status(500).send({ message: 'Error obteniendo el equipo' })
   }
 }
 
-exports.getNewPCs = async (req, res) => {
+exports.getUsedPCs = async (req, res) => {
   try {
-    const newPCs = await NewPC.find({ deleted: false }).populate('ubication')
-    return res.send({ message: 'Equipos nuevos encontrados', newPCs })
+    const usedPCs = await UsedPC.find({ deleted: false }).populate('ubication')
+    return res.send({ message: 'Equipos usados encontrados', newPCs: usedPCs })
   } catch (err) {
     console.log(err)
     return res.status(500).send({ message: 'Error obteniendo los equipos' })
   }
 }
 
-exports.searchNewPC = async (req, res) => {
+exports.searchUsedPC = async (req, res) => {
   try {
     const params = req.body
     const data = {
@@ -189,28 +190,27 @@ exports.searchNewPC = async (req, res) => {
       return res.status(400).send(msg)
     }
 
-    const newPCs = await NewPC.find({
+    const usedPCs = await UsedPC.find({
       serialNumber: { $regex: params.serialNumber, $options: 'i' },
       deleted: false,
     })
-    return res.send({ message: 'Equipos nuevos encontrados', newPCs })
+    return res.send({ message: 'Equipos usados encontrados', newPCs: usedPCs })
   } catch (err) {
     console.log(err)
     return res
       .status(500)
-      .send({ message: 'Error obteniendo los nuevos equipos' })
+      .send({ message: 'Error obteniendo los equipos usados' })
   }
 }
 
-exports.updateNewPC = async (req, res) => {
+exports.updateUsedPC = async (req, res) => {
   try {
-    const newPCId = req.params.id
+    const usedPCId = req.params.id
     const params = req.body
     const data = {
       brand: params.brand,
       model: params.model,
       serialNumber: params.serialNumber,
-      purchaseOrder: params.purchaseOrder,
       ubication: params.ubication,
     }
 
@@ -220,11 +220,11 @@ exports.updateNewPC = async (req, res) => {
       return res.status(400).send(msg)
     }
 
-    const newPC = await NewPC.findOne({ _id: newPCId })
-    if (!newPC) {
+    const usedPC = await UsedPC.findOne({ _id: usedPCId })
+    if (!usedPC) {
       return res
         .status(400)
-        .send({ message: 'No se ha encontrado el equipo nuevo' })
+        .send({ message: 'No se ha encontrado el equipo usado' })
     }
 
     const checkUpdated = await checkUpdateNewPC(params)
@@ -237,8 +237,8 @@ exports.updateNewPC = async (req, res) => {
     const checkNewPC = await findNewPC(params.serialNumber)
     const checkUsedPC = await findUsedPC(params.serialNumber)
     if (
-      (checkNewPC && params.serialNumber !== newPC.serialNumber) ||
-      checkUsedPC
+      (checkUsedPC && params.serialNumber !== usedPC.serialNumber) ||
+      checkNewPC
     ) {
       return res.status(400).send({
         message: 'El número de serial ya se encuentra registrado',
@@ -249,7 +249,7 @@ exports.updateNewPC = async (req, res) => {
       _id: params.ubication,
       deleted: false,
     })
-    if (!checkUbication && params.ubication !== newPC.ubication.toString()) {
+    if (!checkUbication && params.ubication !== usedPC.ubication.toString()) {
       return res.status(400).send({
         message: 'La ubicación seleccionada no existe',
       })
@@ -257,7 +257,7 @@ exports.updateNewPC = async (req, res) => {
 
     if (
       checkUbication.occupied &&
-      params.ubication !== newPC.ubication.toString()
+      params.ubication !== usedPC.ubication.toString()
     ) {
       return res.status(400).send({
         message: 'La ubicación ingresada se encuentra ocupada',
@@ -270,19 +270,23 @@ exports.updateNewPC = async (req, res) => {
       })
     }
 
-    const updateNewPC = await NewPC.findOneAndUpdate({ _id: newPCId }, data, {
-      new: true,
-    })
+    const updateUsedPC = await UsedPC.findOneAndUpdate(
+      { _id: usedPCId },
+      params,
+      {
+        new: true,
+      }
+    )
       .lean()
       .populate('ubication')
-    if (!updateNewPC) {
+    if (!updateUsedPC) {
       return res
         .status(400)
         .send({ message: 'No se ha podido actualizar el equipo nuevo' })
     }
 
     const updateUbication = await CellarUbication.findOneAndUpdate(
-      { _id: newPC.ubication },
+      { _id: usedPC.ubication },
       { occupied: false },
       { new: true }
     )
@@ -294,8 +298,8 @@ exports.updateNewPC = async (req, res) => {
     )
 
     return res.send({
-      message: 'Equipo nuevo actualizado correctamente',
-      updateNewPC,
+      message: 'Equipo usado actualizado correctamente',
+      updateUsedPC,
       updateUbication,
       updateNewUbication,
     })
@@ -303,19 +307,19 @@ exports.updateNewPC = async (req, res) => {
     console.log(err)
     return res
       .status(500)
-      .send({ message: 'Error actualizando el equipo nuevo' })
+      .send({ message: 'Error actualizando el equipo usado' })
   }
 }
 
-exports.deleteNewPC = async (req, res) => {
+exports.deleteUsedPC = async (req, res) => {
   try {
     const newPCId = req.params.id
 
-    const findNewPC = await NewPC.findOne({ _id: newPCId })
+    const findNewPC = await UsedPC.findOne({ _id: newPCId })
     if (!findNewPC) {
       return res
         .status(400)
-        .send({ message: 'No se ha encontrado el equipo nuevo' })
+        .send({ message: 'No se ha encontrado el equipo usado' })
     }
 
     const findCellarUbication = await CellarUbication.findOne({
@@ -327,7 +331,7 @@ exports.deleteNewPC = async (req, res) => {
         .send({ message: 'No se ha encontrado la ubicación' })
     }
 
-    const deleteNewPC = await NewPC.findOneAndUpdate(
+    const deleteNewPC = await UsedPC.findOneAndUpdate(
       { _id: newPCId },
       { deleted: true, state: 'Eliminado' },
       { new: true }
@@ -335,7 +339,7 @@ exports.deleteNewPC = async (req, res) => {
     if (!deleteNewPC) {
       return res
         .status(400)
-        .send({ message: 'No se ha podido eliminar el equipo nuevo' })
+        .send({ message: 'No se ha podido eliminar el equipo usado' })
     }
 
     await CellarUbication.findOneAndUpdate(
@@ -349,13 +353,13 @@ exports.deleteNewPC = async (req, res) => {
         .send({ message: 'No se ha podido actualizar la ubicación' })
     }
 
-    await NewPCRegister.findOneAndUpdate(
+    await UsedPCRegister.findOneAndUpdate(
       { newPC: newPCId },
       { check_out: moment().format('YYYY-MM-DD HH:mm:ss') },
       { new: true }
     )
 
-    return res.send({ message: 'Equipo usado eliminado correctamente' })
+    return res.send({ message: 'Equipo nuevo eliminado correctamente' })
   } catch (err) {
     console.log(err)
     return res.status(500).send({ message: 'Error eliminando la ubicación' })

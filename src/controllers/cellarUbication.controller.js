@@ -81,7 +81,10 @@ exports.getCellarUbications = async (req, res) => {
 
 exports.getNotOccupiedCellarUbications = async (req, res) => {
   try {
-    const cellars = await CellarUbication.find({ occupied: false, deleted: false })
+    const cellars = await CellarUbication.find({
+      occupied: false,
+      deleted: false,
+    })
     return res.send({ message: 'Ubicaciones encontradas', cellars })
   } catch (error) {
     console.log(error)
@@ -183,6 +186,12 @@ exports.deleteCellarUbication = async (req, res) => {
       return res
         .status(400)
         .send({ message: 'La ubicación ya se encuentra eliminada' })
+    }
+
+    if (cellar.occupied) {
+      return res
+        .status(400)
+        .send({ message: 'La ubicación se encuentra ocupada' })
     }
 
     const deleteUbication = await CellarUbication.findOneAndUpdate(
