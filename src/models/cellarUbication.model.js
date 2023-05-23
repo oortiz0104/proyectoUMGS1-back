@@ -2,9 +2,10 @@
 const mongoose = require('mongoose')
 
 const cellarUbicationSchema = mongoose.Schema({
-  cellarNumber: Number,
+  cellarNumber: String,
   shelve: String,
   occupied: Boolean,
+  deleted: { type: Boolean, default: false },
 })
 
 module.exports = mongoose.model('cellarUbication', cellarUbicationSchema)

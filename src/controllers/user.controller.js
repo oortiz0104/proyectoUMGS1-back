@@ -105,7 +105,10 @@ exports.searchUser = async (req, res) => {
     const user = await User.find({
       username: { $regex: params.username, $options: 'i' },
     })
-    return res.send(user)
+    return res.send({
+      message: 'Usuarios encontrados:',
+      user,
+    })
   } catch (err) {
     console.log(err)
     return res.status(500).send({ message: 'Error buscando el usuario' })

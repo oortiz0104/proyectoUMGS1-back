@@ -53,7 +53,13 @@ exports.encrypt = async (password) => {
 
 exports.checkUpdate = async (params) => {
   try {
-    if (params.password || Object.entries(params).length === 0 || params.role) {
+    if (
+      params.password ||
+      Object.entries(params).length === 0 ||
+      params.role ||
+      params.deleted ||
+      params.occupied
+    ) {
       return false
     } else {
       return true
@@ -82,10 +88,45 @@ exports.checkUpdate_OnlyAdmin = async (params) => {
 exports.findCellarUbication = async (cellarNumber, shelve) => {
   try {
     let exist = await CellarUbication.findOne({
-      cellarNumber: cellarNumber,
-      shelve: shelve,
+      cellarNumber: cellarNumber ?? '',
+      shelve: shelve ?? '',
     }).lean()
     return exist
+  } catch (err) {
+    console.log(err)
+    return err
+  }
+}
+
+//* PC Nuevos ---------------------------------------------------------------------------------------
+
+exports.findNewPC = async (serialNumber) => {
+  try {
+    let exist = await NewPC.findOne({ serialNumber: serialNumber }).lean()
+    return exist
+  } catch (err) {
+    console.log(err)
+    return err
+  }
+}
+
+exports.findeNewPCPurchaseOrder = async (purchaseOrder) => {
+  try {
+    let exist = await NewPC.findOne({ purchaseOrder: purchaseOrder }).lean()
+    return exist
+  } catch (err) {
+    console.log(err)
+    return err
+  }
+}
+
+exports.checkUpdateNewPC = async (params) => {
+  try {
+    if (params.state || Object.entries(params).length === 0 || params.deleted) {
+      return true
+    } else {
+      return false
+    }
   } catch (err) {
     console.log(err)
     return err

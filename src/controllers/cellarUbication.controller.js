@@ -4,7 +4,6 @@ const {
   validateData,
   findCellarUbication,
   checkUpdate,
-  findShelve,
 } = require('../utils/validate')
 const CellarUbication = require('../models/cellarUbication.model')
 
@@ -22,6 +21,8 @@ exports.addCellarUbication = async (req, res) => {
     const data = {
       cellarNumber: params.cellarNumber,
       shelve: params.shelve,
+      occupied: false,
+      deleted: false,
     }
 
     const msg = validateData(data)
@@ -53,7 +54,10 @@ exports.getCellarUbication = async (req, res) => {
   try {
     const cellarUbicationId = req.params.id
 
-    const cellar = await CellarUbication.findOne({ _id: cellarUbicationId })
+    const cellar = await CellarUbication.findOne({
+      _id: cellarUbicationId,
+      deleted: false,
+    })
     if (!cellar) {
       return res.status(400).send({ message: 'Ubicación no encontrada' })
     }
@@ -67,10 +71,20 @@ exports.getCellarUbication = async (req, res) => {
 
 exports.getCellarUbications = async (req, res) => {
   try {
-    const cellars = await CellarUbication.find()
+    const cellars = await CellarUbication.find({ deleted: false })
     return res.send({ message: 'Ubicaciones encontradas', cellars })
   } catch (err) {
     console.log(err)
+    return res.status(500).send({ message: 'Error obteniendo las ubicaciones' })
+  }
+}
+
+exports.getNotOccupiedCellarUbications = async (req, res) => {
+  try {
+    const cellars = await CellarUbication.find({ occupied: false, deleted: false })
+    return res.send({ message: 'Ubicaciones encontradas', cellars })
+  } catch (error) {
+    console.log(error)
     return res.status(500).send({ message: 'Error obteniendo las ubicaciones' })
   }
 }
@@ -89,10 +103,10 @@ exports.searchCellarUbication = async (req, res) => {
     }
 
     const cellars = await CellarUbication.find({
-      cellarNumber: { $regex: params.cellarNumber, $options: 'i' },
-      shelve: { $regex: params.shelve, $options: 'i' },
+      cellarNumber: { $regex: params.cellarNumber.toString(), $options: 'i' },
+      shelve: { $regex: params.shelve ?? '', $options: 'i' },
     })
-    return res.send(cellars)
+    return res.send({ message: 'Ubicaciones encontradas', cellars })
   } catch (err) {
     console.log(err)
     return res.status(500).send({ message: 'Error obteniendo la bodega' })
@@ -103,9 +117,18 @@ exports.updateCellarUbication = async (req, res) => {
   try {
     const cellarUbicationId = req.params.id
     const params = req.body
+    const data = {
+      cellarNumber: params.cellarNumber,
+      shelve: params.shelve,
+    }
+
+    const msg = validateData(data)
+
+    if (msg) {
+      return res.status(400).send(msg)
+    }
 
     const cellar = await CellarUbication.findOne({ _id: cellarUbicationId })
-
     if (!cellar) {
       return res
         .status(400)
@@ -123,7 +146,7 @@ exports.updateCellarUbication = async (req, res) => {
       data.cellarNumber,
       data.shelve
     )
-    if (checkUbication) {
+    if (checkUbication && checkUbication._id != cellarUbicationId) {
       return res.status(400).send({
         message: 'La ubicación ingresada ya se encuentra registrada',
       })
@@ -155,11 +178,22 @@ exports.deleteCellarUbication = async (req, res) => {
   try {
     const cellarUbicationId = req.params.id
 
-    const deleteUser = await CellarUbication.findOneAndDelete({
-      _id: cellarUbicationId,
-    })
-    if (!deleteUser) {
-      return res.status(500).send({ message: 'Ubicación no encontrada' })
+    const cellar = await CellarUbication.findOne({ _id: cellarUbicationId })
+    if (cellar.deleted) {
+      return res
+        .status(400)
+        .send({ message: 'La ubicación ya se encuentra eliminada' })
+    }
+
+    const deleteUbication = await CellarUbication.findOneAndUpdate(
+      { _id: cellarUbicationId },
+      { deleted: true },
+      { new: true }
+    )
+    if (!deleteUbication) {
+      return res
+        .status(400)
+        .send({ message: 'No se ha encontrado la ubicación a eliminar' })
     }
 
     return res.send({ message: 'Ubicación eliminada correctamente' })
