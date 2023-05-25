@@ -108,6 +108,7 @@ exports.searchCellarUbication = async (req, res) => {
     const cellars = await CellarUbication.find({
       cellarNumber: { $regex: params.cellarNumber.toString(), $options: 'i' },
       shelve: { $regex: params.shelve ?? '', $options: 'i' },
+      deleted: false,
     })
     return res.send({ message: 'Ubicaciones encontradas', cellars })
   } catch (err) {

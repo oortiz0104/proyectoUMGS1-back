@@ -90,6 +90,7 @@ exports.findCellarUbication = async (cellarNumber, shelve) => {
     let exist = await CellarUbication.findOne({
       cellarNumber: cellarNumber ?? '',
       shelve: shelve ?? '',
+      deleted: false,
     }).lean()
     return exist
   } catch (err) {
