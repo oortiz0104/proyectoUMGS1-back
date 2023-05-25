@@ -12,7 +12,7 @@ api.post('/add', [midAuth.ensureAuth, midAuth.isAdmin], cellarUbicationControlle
 
 api.get('/getCellarUbication/:id', [midAuth.ensureAuth, midAuth.isAdmin], cellarUbicationController.getCellarUbication);
 api.get('/getCellarUbications', [midAuth.ensureAuth, midAuth.isAdmin], cellarUbicationController.getCellarUbications);
-api.get('/getNotOccupiedCellarUbications', [midAuth.ensureAuth, midAuth.isAdmin], cellarUbicationController.getNotOccupiedCellarUbications);
+api.get('/getNotOccupiedCellarUbications', [midAuth.ensureAuth], cellarUbicationController.getNotOccupiedCellarUbications);
 
 api.post('/searchCellarUbication', [midAuth.ensureAuth, midAuth.isAdmin], cellarUbicationController.searchCellarUbication);
 
