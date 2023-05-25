@@ -356,7 +356,7 @@ exports.deleteNewPC = async (req, res) => {
       { new: true }
     )
 
-    return res.send({ message: 'Equipo usado eliminado correctamente' })
+    return res.send({ message: 'Equipo nuevo eliminado correctamente' })
   } catch (err) {
     console.log(err)
     return res.status(500).send({ message: 'Error eliminando la ubicación' })

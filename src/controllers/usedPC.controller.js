@@ -102,7 +102,7 @@ exports.checkOut = async (req, res) => {
 
     const usedPC = await UsedPC.findOne({ _id: usedPCId })
     if (!usedPC) {
-      return res.status(400).send({ message: 'Equipo nuevo no encontrado' })
+      return res.status(400).send({ message: 'Equipo usado no encontrado' })
     }
 
     if (usedPC.state === 'Salida') {
@@ -281,7 +281,7 @@ exports.updateUsedPC = async (req, res) => {
     if (!updateUsedPC) {
       return res
         .status(400)
-        .send({ message: 'No se ha podido actualizar el equipo nuevo' })
+        .send({ message: 'No se ha podido actualizar el equipo usado' })
     }
 
     const updateUbication = await CellarUbication.findOneAndUpdate(
@@ -358,7 +358,7 @@ exports.deleteUsedPC = async (req, res) => {
       { new: true }
     )
 
-    return res.send({ message: 'Equipo nuevo eliminado correctamente' })
+    return res.send({ message: 'Equipo usado eliminado correctamente' })
   } catch (err) {
     console.log(err)
     return res.status(500).send({ message: 'Error eliminando la ubicación' })
