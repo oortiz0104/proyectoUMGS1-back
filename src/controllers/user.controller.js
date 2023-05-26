@@ -156,10 +156,6 @@ exports.update_OnlyAdmin = async (req, res) => {
         .send({ message: 'Parámetros no válidos para actualizar' })
     }
 
-    if (params.role !== 'ADMIN' && params.role !== 'EMPLOYEE') {
-      return res.status(401).send({ message: 'El rol ingresado no es valido' })
-    }
-
     const updateUser = await User.findOneAndUpdate({ _id: userId }, data, {
       new: true,
     }).lean()
