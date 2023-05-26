@@ -157,18 +157,11 @@ exports.update_OnlyAdmin = async (req, res) => {
         .send({ message: 'Parámetros no válidos para actualizar' })
     }
 
-    const checkUser = await findUser(params.username)
-    if (checkUser && user.username != params.username) {
-      return res.status(400).send({
-        message: 'Nombre de usuario ya esta en uso, utiliza uno diferente',
-      })
-    }
-
     if (params.role !== 'ADMIN' && params.role !== 'EMPLOYEE') {
       return res.status(401).send({ message: 'El rol ingresado no es valido' })
     }
 
-    const updateUser = await User.findOneAndUpdate({ _id: userId }, params, {
+    const updateUser = await User.findOneAndUpdate({ _id: userId }, data, {
       new: true,
     }).lean()
 
@@ -355,14 +348,7 @@ exports.update = async (req, res) => {
         .send({ message: 'Parámetros no válidos para actualizar' })
     }
 
-    const checkUser = await findUser(params.username)
-    if (checkUser && user.username != params.username) {
-      return res
-        .status(400)
-        .send({ message: 'Este nombre de usuario ya esta en uso' })
-    }
-
-    const updateUser = await User.findOneAndUpdate({ _id: userId }, params, {
+    const updateUser = await User.findOneAndUpdate({ _id: userId }, data, {
       new: true,
     }).lean()
 
