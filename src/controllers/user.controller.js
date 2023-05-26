@@ -128,7 +128,6 @@ exports.update_OnlyAdmin = async (req, res) => {
       surname: params.surname,
       email: params.email,
       phone: params.phone,
-      role: params.role,
     }
 
     const msg = validateData(data)
