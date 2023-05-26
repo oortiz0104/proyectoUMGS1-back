@@ -169,7 +169,7 @@ exports.getUsedPC = async (req, res) => {
 exports.getUsedPCs = async (req, res) => {
   try {
     const usedPCs = await UsedPC.find({ deleted: false }).populate('ubication')
-    return res.send({ message: 'Equipos usados encontrados', newPCs: usedPCs })
+    return res.send({ message: 'Equipos usados encontrados', usedPCs })
   } catch (err) {
     console.log(err)
     return res.status(500).send({ message: 'Error obteniendo los equipos' })
@@ -193,7 +193,7 @@ exports.searchUsedPC = async (req, res) => {
       serialNumber: { $regex: params.serialNumber, $options: 'i' },
       deleted: false,
     })
-    return res.send({ message: 'Equipos usados encontrados', newPCs: usedPCs })
+    return res.send({ message: 'Equipos usados encontrados', usedPCs })
   } catch (err) {
     console.log(err)
     return res
