@@ -9,6 +9,7 @@ const userSchema = mongoose.Schema({
   email: String,
   phone: String,
   role: String,
+  deleted: { type: Boolean, default: false },
 })
 
 module.exports = mongoose.model('user', userSchema)

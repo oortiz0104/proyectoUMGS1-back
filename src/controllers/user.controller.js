@@ -119,13 +119,31 @@ exports.update_OnlyAdmin = async (req, res) => {
   try {
     const userId = req.params.id
     const params = req.body
+    const data = {
+      name: params.name,
+      surname: params.surname,
+      email: params.email,
+      phone: params.phone,
+      role: params.role,
+    }
+
+    const msg = validateData(data)
+
+    if (msg) {
+      return res.status(400).send(msg)
+    }
 
     const user = await User.findOne({ _id: userId })
-
     if (!user) {
       return res
         .status(400)
         .send({ message: 'El usuario ingresado no se ha podido encontrar' })
+    }
+
+    if (user.role === 'ADMIN') {
+      return res
+        .status(400)
+        .send({ message: 'No puedes actualizar a un administrador' })
     }
 
     const checkUpdated = await checkUpdate_OnlyAdmin(params)
@@ -172,6 +190,12 @@ exports.delete_OnlyAdmin = async (req, res) => {
       return res
         .status(400)
         .send({ message: 'El usuario ingresado no se ha podido encontrar' })
+    }
+
+    if (user.role === 'ADMIN') {
+      return res
+        .status(400)
+        .send({ message: 'No puedes eliminar a un administrador' })
     }
 
     const deleteUser = await User.findOneAndDelete({ _id: userId })
@@ -290,12 +314,30 @@ exports.update = async (req, res) => {
   try {
     const userId = req.user.sub
     const params = req.body
+    const data = {
+      name: params.name,
+      surname: params.surname,
+      email: params.email,
+      phone: params.phone,
+    }
+
+    const msg = validateData(data)
+
+    if (msg) {
+      return res.status(400).send(msg)
+    }
 
     const user = await User.findOne({ _id: userId })
     if (!user) {
       return res
         .status(400)
         .send({ message: 'El usuario ingresado no se ha podido encontrar' })
+    }
+
+    if (user.role === 'ADMIN') {
+      return res
+        .status(400)
+        .send({ message: 'No puedes editar una cuenta de administrador' })
     }
 
     const checkUpdated = await checkUpdate(params)
@@ -315,7 +357,7 @@ exports.update = async (req, res) => {
     const updateUser = await User.findOneAndUpdate({ _id: userId }, params, {
       new: true,
     }).lean()
-    
+
     if (!updateUser) {
       return res
         .status(400)
@@ -332,6 +374,19 @@ exports.update = async (req, res) => {
 exports.delete = async (req, res) => {
   try {
     const userId = req.user.sub
+
+    const checkUser = await User.findOne({ _id: userId })
+    if (!checkUser) {
+      return res
+        .status(400)
+        .send({ message: 'El usuario ingresado no se ha podido encontrar' })
+    }
+
+    if (checkUser.role === 'ADMIN') {
+      return res
+        .status(400)
+        .send({ message: 'No puedes eliminar una cuenta de administrador' })
+    }
 
     const deleteUser = await User.findOneAndDelete({ _id: userId })
     if (!deleteUser) {
