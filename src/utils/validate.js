@@ -25,7 +25,10 @@ exports.validateData = (data) => {
 
 exports.findUser = async (username) => {
   try {
-    let exist = await User.findOne({ username: username }).lean()
+    let exist = await User.findOne({
+      username: username,
+      deleted: false,
+    }).lean()
     return exist
   } catch (err) {
     console.log(err)
@@ -72,7 +75,11 @@ exports.checkUpdate = async (params) => {
 
 exports.checkUpdate_OnlyAdmin = async (params) => {
   try {
-    if (Object.entries(params).length === 0 || params.password) {
+    if (
+      Object.entries(params).length === 0 ||
+      params.password ||
+      params.deleted
+    ) {
       return false
     } else {
       return true
@@ -104,16 +111,6 @@ exports.findCellarUbication = async (cellarNumber, shelve) => {
 exports.findNewPC = async (serialNumber) => {
   try {
     let exist = await NewPC.findOne({ serialNumber: serialNumber }).lean()
-    return exist
-  } catch (err) {
-    console.log(err)
-    return err
-  }
-}
-
-exports.findeNewPCPurchaseOrder = async (purchaseOrder) => {
-  try {
-    let exist = await NewPC.findOne({ purchaseOrder: purchaseOrder }).lean()
     return exist
   } catch (err) {
     console.log(err)

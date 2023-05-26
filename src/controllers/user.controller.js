@@ -65,7 +65,7 @@ exports.getUser = async (req, res) => {
   try {
     const userId = req.params.id
 
-    const user = await User.findOne({ _id: userId })
+    const user = await User.findOne({ _id: userId, deleted: false })
     if (!user) {
       return res
         .staus(400)
@@ -81,7 +81,9 @@ exports.getUser = async (req, res) => {
 
 exports.getUsers = async (req, res) => {
   try {
-    const users = await User.find()
+    const users = await User.find({
+      deleted: false,
+    })
     return res.send({ message: 'Usuarios encontrados:', users })
   } catch (err) {
     console.log(err)
@@ -104,6 +106,7 @@ exports.searchUser = async (req, res) => {
 
     const user = await User.find({
       username: { $regex: params.username, $options: 'i' },
+      deleted: false,
     })
     return res.send({
       message: 'Usuarios encontrados:',
@@ -133,7 +136,7 @@ exports.update_OnlyAdmin = async (req, res) => {
       return res.status(400).send(msg)
     }
 
-    const user = await User.findOne({ _id: userId })
+    const user = await User.findOne({ _id: userId, deleted: false })
     if (!user) {
       return res
         .status(400)
@@ -185,7 +188,7 @@ exports.delete_OnlyAdmin = async (req, res) => {
   try {
     const userId = req.params.id
 
-    const user = await User.findOne({ _id: userId })
+    const user = await User.findOne({ _id: userId, deleted: false })
     if (!user) {
       return res
         .status(400)
@@ -198,7 +201,11 @@ exports.delete_OnlyAdmin = async (req, res) => {
         .send({ message: 'No puedes eliminar a un administrador' })
     }
 
-    const deleteUser = await User.findOneAndDelete({ _id: userId })
+    const deleteUser = await User.findOneAndUpdate(
+      { _id: userId },
+      { deleted: true },
+      { new: true }
+    ).lean()
     if (!deleteUser) {
       return res
         .status(400)
@@ -293,7 +300,7 @@ exports.register = async (req, res) => {
 exports.myProfile = async (req, res) => {
   try {
     const userId = req.user.sub
-    const user = await User.findOne({ _id: userId }).lean()
+    const user = await User.findOne({ _id: userId, deleted: false }).lean()
     delete user.password
     delete user.__v
 
@@ -327,7 +334,7 @@ exports.update = async (req, res) => {
       return res.status(400).send(msg)
     }
 
-    const user = await User.findOne({ _id: userId })
+    const user = await User.findOne({ _id: userId, deleted: false })
     if (!user) {
       return res
         .status(400)
@@ -375,7 +382,7 @@ exports.delete = async (req, res) => {
   try {
     const userId = req.user.sub
 
-    const checkUser = await User.findOne({ _id: userId })
+    const checkUser = await User.findOne({ _id: userId, deleted: false })
     if (!checkUser) {
       return res
         .status(400)
@@ -388,7 +395,11 @@ exports.delete = async (req, res) => {
         .send({ message: 'No puedes eliminar una cuenta de administrador' })
     }
 
-    const deleteUser = await User.findOneAndDelete({ _id: userId })
+    const deleteUser = await User.findOneAndUpdate(
+      { _id: userId },
+      { deleted: true },
+      { new: true }
+    ).lean()
     if (!deleteUser) {
       return res.status(400).send({ message: 'Usuario no encontrado' })
     }
