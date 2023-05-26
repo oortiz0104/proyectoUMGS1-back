@@ -45,7 +45,7 @@ exports.register_OnlyAdmin = async (req, res) => {
     }
 
     if (params.role != 'ADMIN' || params.role != 'EMPLOYEE') {
-      return res.staus(401).send({ message: 'El rol no es válido' })
+      return res.status(401).send({ message: 'El rol no es válido' })
     }
 
     data.surname = params.surname
