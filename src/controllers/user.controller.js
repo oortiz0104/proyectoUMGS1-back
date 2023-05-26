@@ -23,10 +23,6 @@ exports.test = (req, res) => {
 exports.register_OnlyAdmin = async (req, res) => {
   try {
     const params = req.body
-    console.log(
-      '🚀 ~ file: user.controller.js:26 ~ exports.register_OnlyAdmin= ~ params:',
-      params
-    )
 
     const data = {
       name: params.name,
@@ -49,10 +45,7 @@ exports.register_OnlyAdmin = async (req, res) => {
       })
     }
 
-    console.log("role === 'ADMIN'", params.role === 'ADMIN')
-    console.log("role === 'EMPLOYEE'", params.role === 'EMPLOYEE')
-
-    if (params.role !== 'ADMIN' || params.role !== 'EMPLOYEE') {
+    if (params.role !== 'ADMIN' && params.role !== 'EMPLOYEE') {
       return res.status(401).send({ message: 'El rol no es válido' })
     }
 
@@ -171,7 +164,7 @@ exports.update_OnlyAdmin = async (req, res) => {
       })
     }
 
-    if (params.role != 'ADMIN' || params.role != 'EMPLOYEE') {
+    if (params.role !== 'ADMIN' && params.role !== 'EMPLOYEE') {
       return res.status(401).send({ message: 'El rol ingresado no es valido' })
     }
 
